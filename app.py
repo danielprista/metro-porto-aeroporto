@@ -2,11 +2,13 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 DEFAULT_GTFS_PATH = "google_transit_31_03_2026"
 TRINDADE_STOP_ID = 5726
 DESTINO = "Aeroporto"
+LISBON_TZ = ZoneInfo("Europe/Lisbon")
 
 st.set_page_config(
     page_title="Próximas partidas para o Aeroporto",
@@ -39,6 +41,11 @@ def get_operational_day(now: datetime) -> datetime:
     Em operação GTFS, horários após a meia-noite podem pertencer ao dia anterior.
     Exemplo: 25:07:00 corresponde a 01:07 do dia seguinte.
     """
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=LISBON_TZ)
+    else:
+        now = now.astimezone(LISBON_TZ)
+
     if now.hour < 2:
         return now - timedelta(days=1)
 
@@ -63,7 +70,8 @@ def convert_gtfs_time_to_datetime(gtfs_time: str, operational_day: datetime) -> 
     return datetime(
         operational_day.year,
         operational_day.month,
-        operational_day.day
+        operational_day.day,
+        tzinfo=LISBON_TZ
     ) + timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 
@@ -147,7 +155,7 @@ def get_next_arrivals(valid_trips: pd.DataFrame, now: datetime, limit: int = 5):
 
 @st.fragment(run_every=1)
 def countdown(timer):
-    now = datetime.now()
+    now = datetime.now(LISBON_TZ)
 
     if timer > now:
         delta = timer - now
@@ -205,8 +213,7 @@ number_of_results = 5
 try:
     stop_times, trips, calendar_dates = load_gtfs_data(gtfs_path)
 
-    now = datetime.now()
-
+    now = datetime.now(LISBON_TZ)
     valid_trips = prepare_airport_trips(
         stop_times=stop_times,
         trips=trips,
