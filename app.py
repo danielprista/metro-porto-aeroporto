@@ -5,7 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 
-DEFAULT_GTFS_PATH = "google_transit_31_03_2026"
+DEFAULT_GTFS_PATH = "gtfs_data"
 TRINDADE_STOP_ID = 5726
 DESTINO = "Aeroporto"
 LISBON_TZ = ZoneInfo("Europe/Lisbon")
